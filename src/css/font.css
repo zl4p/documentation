@@ -1,0 +1,38 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: "monserrat";
+    src: url("../fonts/montserrat/regular.woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "monserrat";
+    src: url("../fonts/montserrat/bold.woff2");
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: "merriweather";
+    src: url("../fonts/merriweather/regular.woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: "merriweather";
+    src: url("../fonts/merriweather/bold.woff2");
+    font-weight: 700;
+    font-style: normal;
+}
+@font-face {
+    font-family: "merriweather";
+    src: url("../fonts/merriweather/black.woff2");
+    font-weight: 900;
+    font-style: normal;
+}
+@font-face {
+    font-family: "merriweather";
+    src: url("../fonts/merriweather/regular.woff2");
+    font-style: italic;
+}

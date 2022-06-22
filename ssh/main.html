@@ -5,10 +5,160 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Installation Serveur SSH</title>
+    <link rel="stylesheet" href="../src/css/font.css">
+    <link rel="stylesheet" href="../src/css/defaut.css">
 </head>
 <body>
 <div class="conteneur">
-    
+<h1 class="title">Installation et configuration pour SSH</h1>
+<ul>
+    <li class='titre1'>Présentation</li>
+    <li class="titre2">Le service Secure SHell</li>
+    <li>
+        Le <b>SSH</b> (Secure SHell) est un protocole permettant la connexion sur une machine distante à travers un tunnel sécurise.<br>
+        Nous allons l'installer, puis le configurer sur un serveur pour permettre la gestion de ce serveur à distance, à travers internet par exemple.<br>        
+    </li>
+</ul>
+
+<!-- Fonctionnement -->
+<ul>
+    <li class="titre1">Fonctionnement</li>
+    <li>Il garantit que seuls les utilisateurs autorisés peuvent se contacter et se comprendre.</li>
+    <li class="titre3">Authentification</li>
+    <li>
+        Permet de vérifier que les deux intervenants sont ceux attendus.
+        Le serveur commence par envoyer un certificat, le client
+        Après que les deux machines se soient identifiées mutuellement.<br>
+        <ul class="listing">
+            <li>le serveur transmet un certificat au client pour vérifier qu'il s'agit du serveur attendu.</li>
+            <li>Le client effectue un hashage du certificat, si il n'est pas connue, une confirmation sera demandé au client.</li>
+            <li>Après confirmation le client peut s'authentifier donc par mot de passe ou par clef publique/privée</li>
+        </ul>
+        L'authentification par clef, étant plus sécurisé, le serveur envoi une phrase chiffrée avec la clef publique du client.
+        Le client déchiffre avec sa clef privée, et le renvoi au serveur.
+        L'autorisation de connexion est donc possible si l'échange a été validée.
+        <ul>
+            <li class="titre3">Chiffrement</li>
+            <li>
+                Après la validation de l'authentification, le serveur et le client génère une clef
+                commmune pour chiffrer les échanges, et négocie aussi un algorithme de hashage pour vérifier
+                l'intégrité des données.    
+            </li>
+        </ul>
+    </li>
+</ul>
+
+<!-- Installation -->
+<ul>
+    <li class="titre1">Installation</li>
+    <li>Notre installation va s'éffectuer avec une distirbution linux Debian 11.Installation des paquetages.</li>
+    <li class='coding'>
+        $ sudo apt install openssh-server
+    </li>
+</ul>
+
+<!-- Configuration -->
+<ul>
+    <li class="titre1">Configuration</li>
+    <li class="titre3">Création utilisateurs</li>
+    <li>
+       Ajout d'un utilisateur qui sera charger de la gestion des clefs, il aura plein accès sur le répertoire <span class='coding'>/etc/ssh/keys/</span>
+    </li>
+    <li class='coding'>
+        $ sudo groupadd adminssh<br>
+        $ sudo useradd adminssh -g adminssh<br>
+        $ sudo sudo mkdir -p /etc/ssh/keys<br>
+        $ sudo chown adminssh:adminssh /etc/ssh/keys/<br>
+        $ sudo chmod 775 /etc/ssh/keys/<br>
+        $ sudo ls -l /etc/ssh/ | grep keys<br>
+        <b>drwxrwxr-x 2 adminssh adminssh   4096 21 juin  18:06 keys</b>
+    </li>
+    <li class="titre3">Mise en place</li>
+    <li>Création de la clef privée et publique.</li>
+    <li class="coding">
+        $ sudo ssh-keygen -t ecdsa -f /etc/ssh/keys/serveur.key<br>
+        Generating public/private ecdsa key pair.<br>
+        Enter passphrase (empty for no passphrase):<br>
+        Enter same passphrase again:<br>
+        Your identification has been saved in /etc/ssh/keys/serveur.key<br>
+        Your public key has been saved in /etc/ssh/keys/serveur.key.pub<br>
+        The key fingerprint is:<br>
+        <b>SHA256:xrgjpbn94f57fodrFbg/Y326it0DNigE+InCb7xq4mc root@serveur</b><br>
+        The key's randomart image is:<br>
+        <b>...</b>
+    </li>
+    <li>
+        On peut voir que l'empreinte de la clé est affiché en dessous de <i class="coding">The key fingerprint</i>.<br>
+        Cette empreinte sera demandée au client pour vérifier si il s'agit bien du certificat du serveur attendu.
+    </li>
+    <li class="titre2">Fichier de configuration</li>
+    <li>
+        Après avoir fait une copie du fichier, on va agencer le fichier de configuration pour recevoir les connexions sur l'adresse 192.168.44.128, sur le port 60001.
+        <li class="coding">
+            <blue># Configuration SSHD.<br>
+            # ==============================<br>
+            </blue>
+            Port 60001<br>
+            ListenAddress 192.168.44.128<br>
+            HostKey /etc/ssh/keys/serveur.key<br>
+            SyslogFacility AUTH<br>
+            LogLevel INFO<br>
+            <blue>
+            # Authentification<br>
+            </blue>
+            LoginGraceTime 2m<br>
+            MaxAuthTries 3<br>
+            MaxSessions 3<br>
+            PermitEmptyPasswords no
+        </li>
+    </li>
+    <li>
+        On redemarre le service et vérifie le status du service.
+    </li>
+    <li class="coding">
+$ systemctl restart sshd
+$ systemctl status sshd<br>
+● ssh.service - OpenBSD Secure Shell server<br>
+Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)<br>
+Active: <b><vert>active</vert></b> (running) since Wed 2022-06-22 10:18:46 CEST; 8min ago
+    </li>
+</ul>
+
+<!-- Connexion -->
+<ul>
+    <li class="titre1">Connexion au serveur</li>
+    <li class="titre3">Authentification avec mot de passe</li>
+    <li>Sur un poste client, on va établir une connexion sur le serveur.</li>
+    <li class="coding">
+        $ ssh -l user -p 60001 192.168.44.128<br>
+        The authenticity of host '[192.168.44.128]:60001 ([192.168.44.128]:60001)' can't be established.<br>
+        ECDSA key fingerprint is <b><vert>SHA256:xrgjpbn94f57fodrFbg/Y326it0DNigE+InCb7xq4mc.</vert></b><br>
+        This key is not known by any other names<br>
+        Are you sure you want to continue connecting (yes/no/[fingerprint])? yes<br>
+        Warning: Permanently added '[192.168.44.128]:60001' (ECDSA) to the list of known hosts.<br>
+        user@192.168.44.128's password:<br>
+        ...
+    </li>
+    <li>
+    La connexion avec l'utilisateur user, s'est bien déroulé sur le port 60001.<br>
+    L'empreinte SHA256, du certificat est celui attendu,il correspond à celui lors de la création de la clef.<br>
+    </li>
+    <li class="titre3">Authentification par clefs</li>
+    <li>Nous allons créer une clef, pour notre client comme pour le serveur.</li>
+    <li class="coding">$ ssh-keygen.exe -t ecdsa -f client.key</li>
+    <li>
+        On va transmettre notre clef publique au serveur, pour permettre son authentification.<br>
+        Lors de la connexion le serveur va chercher la clef publique dans le répertoire courant de l'utilisateur <i><b>~/.ssh/client.key.pub</b></i>.<br>
+        On peut soit l'envoyer manuellement, ou soit utiliser la commande :
+        <li class="coding">
+            $ sudo ssh-copy-id -i ~/client.key.pub user@host 
+        </li>
+        <li>Une fois la clef copiée,et accepter par le serveur, on peut se connecter avec la commande :</li>
+        <li class="coding">
+            $ sudo ssh -ri ~/client.key -l user host 
+        </li>
+    </li>
+</ul>
 </div>
 </body>
 </html>
