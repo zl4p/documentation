@@ -36,3 +36,11 @@
     src: url("../fonts/merriweather/regular.woff2");
     font-style: italic;
 }
+
+@font-face {
+	font-family: "inter";
+	src: url("../fonts/inter/Inter-roman.var.woff2") format("woff2");
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+}
