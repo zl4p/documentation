@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Serveur SSH</title>
+    <link rel="stylesheet" href="../src/css/font.css">
+    <link rel="stylesheet" href="../src/css/style.css">
+</head>
+<body>
+<page>
+<entete>Solution pour émulation réseau sous LINUX</entete>
+<chapitre titre="Présentation">
+    Pour émuler une architecture réseau, il existe plusieurs solutions comme GNS3 ou VIRL de CISCO.
+    Dans notre cas, on va chercher à émuler notre architecture avec des routeurs CISCO.
+    L'émulation va se faire avec le très connu Dynamips.
+    Dynamips est un émulateur de processeur MIPS, à proprement parler il permet d'émuler que les routeurs fonctionnant avec cette famille de processeur. 
+    On est donc limiter sur les choix des routeurs qu'il est possible d'émuler, c'est le cas de la famille 7200. C'est ce dernier que l'on va utiliser. 
+</chapitre>
+<chapitre titre="Installation">
+    Pour notre émulation nous aurons besoin de l'émulation réseau et routeurs.<br>
+    Les fichiers nécessaires sont les suivants :<br>
+    <ul>
+		<li><b>dynamips</b> : <a href="git clone git://github.com/GNS3/dynamips.git">git clone git://github.com/GNS3/dynamips.git</a></li>
+		<li><b>dynagen</b> : <a href='https://sourceforge.net/projects/dyna-gen/files/dynagen%20source%20_%20Linux/'>https://sourceforge.net/projects/dyna-gen/files/dynagen%20source%20_%20Linux/</a></li>
+	</ul>
+    <sous-chapitre titre="Installation Dynamips">
+        Avant d'installer dynamips avec les sources, il est necessaire d'installer le librairies suivantes :
+        <ul>
+            <li><b>libelf-dev</b> : les fichiers dev pour libelf</li>
+            <li><b>libcap0.8-dev</b> : les fichiers dev pour libcap</li>
+        </ul>
+        Nous pouvons passer à la compilation des sources :
+<pre>
+$ sudo apt install libelf-dev libpcap0.8-dev
+$ git clone git://github.com/GNS3/dynamips.git
+$ cd dynamips
+$ mkdir build
+$ cd build
+$ cmake ..
+</pre>
+    </sous-chapitre>
+    <sous-chapitre titre="Installation Dynagen">
+        A l'écriture de cet article, la version actuelle est la 0.11.0 .<br>
+        Pour fonctionner dynagen, aura besoin de python, assurer qu'une version disponible. 
+<pre class="code">
+$ tar xvf dynagen-0.11.0.tar.gz
+$ sudo cp -pRvf dynagen-0.11.0/ /opt/dynagen/
+$ sudo ln -sfn /opt/dynagen/dynagen /usr/bin/dynagen
+$ dynagen --version 
+</pre>
+    </sous-chapitre>
+    
+    <sous-chapitre titre="Fichier IOS">
+        Les images IOS ne sont pas libres, il vous faudra le routeur associé pour récupérer une image.<br>
+        Ici nous allons utilisé une image de la famille 7200 pour nos routeurs.
+<pre class="code">
+$ mkdir ~/images
+$ unzip -p images-c7200.bin > c7200.image 
+</pre>
+    </sous-chapitre>
+</chapitre>
+
+<chapitre titre="Virtualisation">
+    <sous-chapitre titre="Architecture">
+        Notre architecure sera la suivante :
+        <img src="shema01.drawio.png">
+    </sous-chapitre>
+
+    <sous-chapitre titre="Fichier de configuration">
+        Le fichier de configuration sera lu par dynagen, et donnera les informations liées à notre architecture précédente,ce qui nous donne :
+<pre class="code" fichier="~/virtualisation/network.conf">
+[localhost]
+ghostios = true
+sparsemem = true
+[[7200]]
+image = ./c7200.image
+model = 7200
+ram = 512
+[[ROUTER IPS]]
+f0/0 = RFS1 f0/0
+f0/1 = RFS2 f0/0
+[[ROUTER RFS1]]
+f0/1 = SWD1 1
+[[ROUTER RFS2]]
+f0/1 = SWD1 1
+[[ETHSW SWD1]]
+1 = access 1
+[[ETHSW SWD2]]
+1 = access 1
+</pre>
+        Dynagen est supplié par dynamips pour pouvoir fonctionner, pour virtualiser le fichier image entre autres.
+        On va commencer par lancer dynamips sur le port 7200.
+<pre class="code">
+$ dynamips -H 7200 &
+$ dynagen ~/virtualisation/network.conf 
+</pre>
+        Avec la commande list nous verifions que notre configuration a bien été prise en compte :
+<pre class="code">
+Dynagen management console for Dynamips and Pemuwrapper 0.11.0
+Copyright (c) 2005-2007 Greg Anuzelli, contributions Pavel Skovajsa
+=> list
+Name Type State Server Console
+IPS 7200 running localhost:7200 2000
+RFS1 7200 running localhost:7200 2001
+RFS2 7200 running localhost:7200 2002
+SWD1 ETHSW always on localhost:7200 n/a
+SWD2 ETHSW always on localhost:7200 n/a
+=> 
+</pre>
+    </sous-chapitre>
+</chapitre>
+
+<chapitre titre="Connexion">
+    Nous pouvons, nous connectter aux différents équipements. A l'aide de la commande <b>list</b>
+    de dynagen.
+    Par exemple si on se fit à la commande "<i>list</i>" précédente,pour se connecter à IPS :
+<pre class="code">
+$ telnet localhost 2000
+</pre>
+</chapitre>
+</page>
+</body>
+<script src="../src/js/style.js"></script>
+</html>

@@ -1,0 +1,160 @@
+/*******************************
+ * Name : Styles.js
+ * Auteur : Z4ck
+ * Date : 28/06/2022
+ * Version : 0.1
+ ******************************/
+
+
+@charset "utf-8";
+
+* {
+    box-sizing: border-box;
+    list-style: none;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #FEFEFE;
+    font-family: "inter","merriweather",Georgia, 'Times New Roman', Times, serif;
+    font-weight: 400;
+    height: 100vh;
+    counter-reset: chapitre;
+    font-size: 14px;
+}
+/***********************************
+    Responsives @MEDIA
+***********************************/
+
+
+page {
+    width: 1024px;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto 100px auto;
+}
+
+
+entete {
+    margin: 15px 0;
+    padding: 10px 10px;
+    text-align: center;
+    background-color: #333;
+    color: #FFFFFF;
+    border-bottom: solid 5px #9e0332;
+    border-radius: 3px;
+    display: block;
+    width: 100%;
+    font-family: "monserrat",Arial, Helvetica, sans-serif;
+    font-size: 24px;
+    line-height: 26px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+chapitre {
+    display: block;
+    list-style: none;
+    padding: 0;
+    margin: 10px 10px;
+    box-sizing: border-box;
+    counter-reset: sous-chapitre;
+}
+chapitre > .titre {
+    display: block;
+    width: 100%;
+    font-family: "merriweather",Georgia, 'Times New Roman', Times, serif;
+    font-size: 1.4em;
+    line-height: 1.8em;
+    padding: 0px 0px;
+    font-weight: 700;
+    margin-bottom: 0.5em;
+    border-bottom: solid 2px #9e0332;
+}
+
+chapitre > .titre::before {
+    content: counter(chapitre) ". ";
+    counter-increment: chapitre;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+chapitre > sous-chapitre .titre::before {
+    content: counter(chapitre) "." counter(sous-chapitre) ". ";
+    counter-increment: sous-chapitre;
+    font-family: inherit;
+    font-size: inherit;
+}
+chapitre > sous-chapitre {
+    display: block;
+    list-style: none;
+    padding: 0;
+    margin: 10px 10px;
+    box-sizing: border-box;
+}
+
+chapitre > sous-chapitre .titre {
+    font-size: 1.2em;
+    line-height: 1.6em;
+    display: block;
+    margin-bottom: 0.2em;
+    margin-top: 1em;
+    font-weight: 400;
+    color: #9e0332;
+}
+
+ul {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0.8em 0.5em;
+    font-family: "inter","merriweather",Georgia, 'Times New Roman', Times, serif;
+    counter-reset: listing;
+}
+li {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin-bottom: 0.4em;
+}
+li::before {
+    content: counter(listing) ". ";
+    counter-increment: listing;
+}
+
+a {
+    text-decoration: none;
+    color: #003d8d;
+}
+a:hover {
+    text-decoration: underline;
+}
+img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-width: 300px;
+    max-height: 300px;
+    margin: 0 auto;
+}
+
+commentaire {
+    font-family: Consolas,'Liberation Mono',Courier,monospace;
+    color: #333;
+    background: #f8f8f8;
+    border-radius: 3px;
+    padding: 5px 8px;
+    border: solid 1px #e0e0e0;
+    border-radius: 3px;
+    margin: 1.0em 0;
+}
+pre.code {
+    display: block;
+    font-family: Consolas,'Liberation Mono',Courier,monospace;
+    color: #333;
+    background: #f8f8f8;
+    border-radius: 3px;
+    padding: 5px 8px;
+    border: solid 1px #e0e0e0;
+    border-radius: 3px;
+    margin: 1.0em 0;
+    width: 100%;
+}

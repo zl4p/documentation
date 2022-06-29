@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Serveur SSH</title>
+    <link rel="stylesheet" href="../src/css/font.css">
+    <link rel="stylesheet" href="../src/css/style.css">
+</head>
+<body>
+<page>
+<entete>Installation et configuration pour SSH</entete>
+
+<chapitre titre="Présentation">
+<sous-chapitre>
+    Le <b>SSH</b> (Secure SHell) est un protocole permettant la connexion sur une machine distante à travers un tunnel sécurise.<br>
+    Nous allons l'installer, puis le configurer sur un serveur pour permettre la gestion de ce serveur à distance, à travers internet par exemple.<br>
+</sous-chapitre>
+</chapitre>
+
+<chapitre titre="Fonctionnement">
+Il garantit que seuls les utilisateurs autorisés peuvent se contacter et se comprendre.
+<sous-chapitre titre="Authentification">
+    Permet de vérifier que les deux intervenants sont ceux attendus.
+    Le serveur commence par envoyer un certificat, le client
+    Après que les deux machines se soient identifiées mutuellement.<br>
+    <ul>
+        <li>le serveur transmet un certificat au client pour vérifier qu'il s'agit du serveur attendu.</li>
+        <li>Le client effectue un hashage du certificat, si il n'est pas connue, une confirmation sera demandé au client.</li>
+        <li>Après confirmation le client peut s'authentifier donc par mot de passe ou par clef publique/privée</li>
+    </ul>
+    L'authentification par clef, étant plus sécurisé, le serveur envoi une phrase chiffrée avec la clef publique du client.
+    Le client déchiffre avec sa clef privée, et le renvoi au serveur.
+    L'autorisation de connexion est donc possible si l'échange a été validée.
+</sous-chapitre>
+<sous-chapitre titre="Chiffrement">
+    Après la validation de l'authentification, le serveur et le client génère une clef
+    commmune pour chiffrer les échanges, et négocie aussi un algorithme de hashage pour vérifier
+    l'intégrité des données.
+</sous-chapitre>
+</chapitre>
+
+<chapitre titre="Installation">
+Notre installation va s'éffectuer avec une distirbution linux Debian 11.Installation des paquetages.
+<pre class="code">
+$ sudo apt install openssh-server
+</pre>
+</chapitre>
+
+<chapitre titre="Configuration">
+  <sous-chapitre titre="Création utilisateurs">
+        Ajout d'un utilisateur qui sera charger de la gestion des clefs, il aura plein accès sur le répertoire
+        <commentaire>/etc/ssh/keys/</commentaire>.
+        <pre src="bash" class="code">
+$ sudo groupadd adminssh
+$ sudo useradd adminssh -g adminssh
+$ sudo sudo mkdir -p /etc/ssh/keys
+$ sudo chown adminssh:adminssh /etc/ssh/keys/
+$ sudo chmod 775 /etc/ssh/keys/
+$ sudo ls -l /etc/ssh/ | grep keys
+<b>drwxrwxr-x 2 adminssh adminssh   4096 21 juin  18:06 keys</b>
+</pre>
+  </sous-chapitre>
+  <sous-chapitre titre="Mise en place">
+    Création de la clef privée et publique.
+<pre class="code">
+$ sudo ssh-keygen -t ecdsa -f /etc/ssh/keys/serveur.key
+Generating public/private ecdsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /etc/ssh/keys/serveur.key
+Your public key has been saved in /etc/ssh/keys/serveur.key.pub
+The key fingerprint is:
+SHA256:xrgjpbn94f57fodrFbg/Y326it0DNigE+InCb7xq4mc root@serveur
+The key's randomart image is:
+...
+</pre>
+On peut voir que l'empreinte de la clé est affiché en dessous de "<b>The key fingerprint</b>"".<br>
+Cette empreinte sera demandée au client pour vérifier si il s'agit bien du certificat du serveur attendu
+    </sous-chapitre>
+
+    <sous-chapitre titre="Fichier de configuration">
+        Après avoir fait une copie du fichier, on va agencer le fichier de configuration pour recevoir les connexions sur l'adresse 192.168.44.128, sur le port 60001.
+<pre class="code">
+# Configuration SSHD.
+# ==============================
+Port 60001
+ListenAddress 192.168.44.128
+HostKey /etc/ssh/keys/serveur.key
+SyslogFacility AUTH
+LogLevel INFO
+# Authentification
+LoginGraceTime 2m
+MaxAuthTries 3
+MaxSessions 3
+PermitEmptyPasswords no
+</pre>
+On redemarre le service et vérifie le status du service. 
+    </sous-chapitre>
+<pre class="code">
+$ systemctl restart sshd $ systemctl status sshd
+● ssh.service - OpenBSD Secure Shell server
+Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)
+Active: active (running) since Wed 2022-06-22 10:18:46 CEST; 8min ago 
+</pre>
+</chapitre>
+
+<chapitre titre="Connexion au serveur">
+    <sous-chapitre titre="Authentification avec mot de passe">
+        Sur un poste client, on va établir une connexion sur le serveur.
+<pre class="code">
+$ ssh -l user -p 60001 192.168.44.128
+The authenticity of host '[192.168.44.128]:60001 ([192.168.44.128]:60001)' can't be established.
+ECDSA key fingerprint is SHA256:xrgjpbn94f57fodrFbg/Y326it0DNigE+InCb7xq4mc.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[192.168.44.128]:60001' (ECDSA) to the list of known hosts.
+user@192.168.44.128's password:
+... 
+</pre>
+        La connexion avec l'utilisateur user, s'est bien déroulé sur le port 60001.
+        L'empreinte SHA256, du certificat est celui attendu,il correspond à celui lors de la création de la clef.
+    </sous-chapitre>
+
+    <sous-chapitre titre="Authentification par clefs">
+        Nous allons créer une clef, pour notre client comme pour le serveur.
+<pre class="code">
+$ ssh-keygen.exe -t ecdsa -f client.key
+</pre>
+        On va transmettre notre clef publique au serveur, pour permettre son authentification.
+        Lors de la connexion le serveur va chercher la clef publique dans le répertoire courant de l'utilisateur ~/.ssh/client.key.pub.
+        On peut soit l'envoyer manuellement, ou soit utiliser la commande :
+<pre class="code">
+$ sudo ssh-copy-id -i ~/client.key.pub user@host 
+</pre>
+        Une fois la clef copiée,et accepter par le serveur, on peut se connecter avec la commande :
+<pre class="code">
+$ sudo ssh -ri ~/client.key -l user host   
+</pre>
+    </sous-chapitre>
+
+
+
+</chapitre>
+</page>
+</body>
+<script src="../src/js/style.js"></script>
+</html>
